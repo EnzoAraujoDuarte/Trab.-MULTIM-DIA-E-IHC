@@ -1,0 +1,106 @@
+ANÁLISE DO MODELO DE SHNEIDERMAN NO PROJETO TASK MANAGER
+=====================================================
+
+1. ESPECIFICAÇÕES (Como o sistema foi planejado)
+------------------------------------------------
+Localização: src/components/TaskManager.jsx
+
+a) Cores e Layout:
+- Definimos um conjunto de cores para diferentes ações:
+  * Azul para ações principais (adicionar tarefa)
+  * Verde para ações de sucesso (salvar)
+  * Vermelho para ações perigosas (excluir)
+  * Amarelo para avisos
+```javascript
+const COLORS = {
+  primary: 'bg-blue-600 hover:bg-blue-700',    // Azul para ações principais
+  success: 'bg-green-600 hover:bg-green-700',  // Verde para sucesso
+  danger: 'bg-red-600 hover:bg-red-700',       // Vermelho para perigo
+  warning: 'bg-yellow-600 hover:bg-yellow-700' // Amarelo para avisos
+};
+```
+
+b) Textos e Mensagens:
+- Todos os textos são claros e em português
+- Mensagens de erro são amigáveis: "Por favor, digite uma tarefa"
+- Botões têm nomes intuitivos: "Adicionar", "Todas", "Pendentes", "Concluídas"
+
+c) Organização da Tela:
+- A aplicação fica centralizada na tela
+- Espaçamento uniforme entre elementos
+- Título grande e visível no topo
+- Lista de tarefas organizada verticalmente
+
+2. FERRAMENTAS DE PROTOTIPAGEM (Como o sistema foi construído)
+------------------------------------------------------------
+Localização: Todo o projeto
+
+a) Next.js (Framework principal):
+- Estrutura organizada de arquivos
+- Páginas carregam rapidamente
+- Sistema moderno e eficiente
+
+b) Tailwind CSS (Estilização):
+- Cores consistentes em toda a aplicação
+- Design responsivo (funciona em celulares e computadores)
+- Animações suaves
+
+c) Lucide React (Ícones):
+- Ícones modernos e claros
+- Símbolos universais para ações
+- Feedback visual através de ícones
+
+3. TESTES DE USABILIDADE (Como o sistema responde ao usuário)
+-----------------------------------------------------------
+Localização: src/components/TaskManager.jsx
+
+a) Feedback Visual (Como o sistema mostra que entendeu o que você fez):
+- Mensagens de erro em vermelho:
+```javascript
+{error && (
+  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4" role="alert">
+    {error}
+  </div>
+)}
+```
+- Tarefas concluídas ficam riscadas e em cinza
+- Botões mudam de cor quando o mouse passa por cima
+
+b) Acessibilidade (Como o sistema ajuda pessoas com deficiência):
+- Textos alternativos para leitores de tela
+- Cores com contraste adequado
+- Navegação por teclado
+
+c) Facilidade de Uso:
+- Campo de texto foca automaticamente ao editar
+- Ações têm resposta imediata
+- Contador de tarefas mostra progresso:
+```javascript
+<div className="mt-4 text-sm text-gray-600">
+  Total: {tasks.length} | 
+  Pendentes: {tasks.filter(t => !t.completed).length} | 
+  Concluídas: {tasks.filter(t => t.completed).length}
+</div>
+```
+
+d) Interação Intuitiva:
+- Botões grandes e fáceis de clicar
+- Ícones que representam bem suas ações
+- Estados visuais claros (normal, hover, clicado)
+
+e) Tratamento de Erros:
+- Validação antes de salvar
+- Mensagens claras quando algo dá errado
+- Erros desaparecem automaticamente após 3 segundos
+
+f) Sequência de Ações:
+- Fluxo lógico: adicionar → editar → concluir → excluir
+- Filtros fáceis de entender
+- Estados de edição claros
+
+Este projeto foi construído pensando em três aspectos principais:
+1. Como deve ser (Especificações)
+2. Como será feito (Ferramentas)
+3. Como funciona na prática (Testes)
+
+Cada aspecto foi cuidadosamente planejado para criar uma experiência agradável e eficiente para o usuário, seguindo os princípios de Shneiderman para criar interfaces amigáveis e funcionais. 
