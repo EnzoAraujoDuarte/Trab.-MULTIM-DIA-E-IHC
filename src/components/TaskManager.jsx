@@ -13,16 +13,23 @@ import { PlusCircle, Trash2, Edit2, CheckCircle, Circle } from 'lucide-react';
  */
 export default function TaskManager() {
   // Estado da aplicação
-  const [tasks, setTasks] = useState([
-    { id: 1, text: 'Aprender sobre o modelo de Shneiderman', completed: false },
-    { id: 2, text: 'Implementar protótipo de interface', completed: false },
-    { id: 3, text: 'Realizar testes de usabilidade', completed: false },
-  ]);
+  const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
-  const [editTask, setEditTask] = useState(null);
-  const [editText, setEditText] = useState('');
   const [filter, setFilter] = useState('all');
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const savedTasks = localStorage.getItem('tasks');
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }, [tasks]);
 
   // Especificações de cores e layout (conforme modelo de Shneiderman)
   const COLORS = {
@@ -33,47 +40,49 @@ export default function TaskManager() {
   };
 
   // Gestão de tarefas
-  const addTask = () => {
+  const addTask = (e) => {
+    e.preventDefault();
     if (!newTask.trim()) {
       setError('Por favor, digite uma tarefa');
+      setTimeout(() => setError(''), 3000);
       return;
     }
-    setError('');
-    const newId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
-    setTasks([...tasks, { id: newId, text: newTask, completed: false }]);
+    setTasks([...tasks, { id: Date.now(), text: newTask, completed: false }]);
     setNewTask('');
+    setError('');
   };
 
   const deleteTask = (id) => {
     setTasks(tasks.filter(task => task.id !== id));
   };
 
-  const toggleComplete = (id) => {
-    setTasks(tasks.map(task => 
+  const toggleTask = (id) => {
+    setTasks(tasks.map(task =>
       task.id === id ? { ...task, completed: !task.completed } : task
     ));
   };
 
-  const startEdit = (task) => {
-    setEditTask(task.id);
+  const startEditing = (task) => {
+    setEditingId(task.id);
     setEditText(task.text);
   };
 
   const saveEdit = () => {
     if (!editText.trim()) {
-      setError('Por favor, digite uma tarefa');
+      setError('A tarefa não pode estar vazia');
+      setTimeout(() => setError(''), 3000);
       return;
     }
-    setError('');
-    setTasks(tasks.map(task => 
-      task.id === editTask ? { ...task, text: editText } : task
+    setTasks(tasks.map(task =>
+      task.id === editingId ? { ...task, text: editText } : task
     ));
-    setEditTask(null);
+    setEditingId(null);
+    setEditText('');
+    setError('');
   };
 
   // Filtro de tarefas
   const filteredTasks = tasks.filter(task => {
-    if (filter === 'all') return true;
     if (filter === 'active') return !task.completed;
     if (filter === 'completed') return task.completed;
     return true;
@@ -94,24 +103,22 @@ export default function TaskManager() {
       </h1>
       
       {/* Formulário de adição - Layout e elementos de entrada definidos nas especificações */}
-      <div className="flex mb-4">
+      <form onSubmit={addTask} className="flex gap-2 mb-6">
         <input
           type="text"
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Nova tarefa..."
-          className="flex-1 p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="Nome da tarefa"
+          placeholder="Digite uma nova tarefa"
+          className="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button 
-          onClick={addTask}
-          className={`${COLORS.primary} text-white p-2 rounded-r-md flex items-center`}
-          aria-label="Adicionar tarefa"
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
         >
           <PlusCircle size={20} />
-          <span className="ml-1">Adicionar</span>
+          Adicionar
         </button>
-      </div>
+      </form>
       
       {/* Feedback de erro - Componente de usabilidade */}
       {error && (
@@ -121,92 +128,77 @@ export default function TaskManager() {
       )}
       
       {/* Filtros - Sequência de ações especificada */}
-      <div className="flex mb-4 space-x-2">
-        <button 
-          onClick={() => setFilter('all')} 
-          className={`px-3 py-1 rounded ${filter === 'all' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100'}`}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setFilter('all')}
+          className={`px-4 py-2 rounded ${filter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
         >
           Todas
         </button>
-        <button 
-          onClick={() => setFilter('active')} 
-          className={`px-3 py-1 rounded ${filter === 'active' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100'}`}
+        <button
+          onClick={() => setFilter('active')}
+          className={`px-4 py-2 rounded ${filter === 'active' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
         >
           Pendentes
         </button>
-        <button 
-          onClick={() => setFilter('completed')} 
-          className={`px-3 py-1 rounded ${filter === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100'}`}
+        <button
+          onClick={() => setFilter('completed')}
+          className={`px-4 py-2 rounded ${filter === 'completed' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
         >
           Concluídas
         </button>
       </div>
       
       {/* Lista de tarefas - Componente principal de interação */}
-      <ul className="space-y-2">
+      <div className="space-y-2">
         {filteredTasks.map(task => (
-          <li key={task.id} className="border rounded-md p-3 flex items-center justify-between">
-            {editTask === task.id ? (
-              <div className="flex-1 flex">
-                <input
-                  type="text"
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                  className="flex-1 p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  autoFocus
-                />
-                <button 
-                  onClick={saveEdit} 
-                  className={`${COLORS.success} text-white p-1 rounded-md ml-2`}
-                  aria-label="Salvar edição"
-                >
-                  <CheckCircle size={20} />
-                </button>
-              </div>
+          <div key={task.id} className="flex items-center gap-2 p-2 border rounded">
+            <button
+              onClick={() => toggleTask(task.id)}
+              className={`p-1 rounded-full ${task.completed ? 'text-green-500' : 'text-gray-400'}`}
+            >
+              {task.completed ? <CheckCircle size={20} /> : <Circle size={20} />}
+            </button>
+            
+            {editingId === task.id ? (
+              <input
+                type="text"
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onBlur={saveEdit}
+                onKeyPress={(e) => e.key === 'Enter' && saveEdit()}
+                className="flex-1 p-1 border rounded"
+                autoFocus
+              />
             ) : (
-              <>
-                <div className="flex items-center flex-1">
-                  <button 
-                    onClick={() => toggleComplete(task.id)}
-                    className="mr-2 text-gray-500 hover:text-green-500"
-                    aria-label={task.completed ? "Marcar como pendente" : "Marcar como concluída"}
-                  >
-                    {task.completed ? (
-                      <CheckCircle size={20} className="text-green-500" />
-                    ) : (
-                      <Circle size={20} />
-                    )}
-                  </button>
-                  <span className={task.completed ? 'line-through text-gray-500' : ''}>
-                    {task.text}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <button 
-                    onClick={() => startEdit(task)} 
-                    className="text-gray-500 hover:text-blue-500 mr-2"
-                    aria-label="Editar tarefa"
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                  <button 
-                    onClick={() => deleteTask(task.id)} 
-                    className="text-gray-500 hover:text-red-500"
-                    aria-label="Remover tarefa"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </>
+              <span className={`flex-1 ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                {task.text}
+              </span>
             )}
-          </li>
+
+            <button
+              onClick={() => startEditing(task)}
+              className="p-1 text-blue-500 hover:text-blue-600"
+              aria-label="Editar tarefa"
+            >
+              <Edit2 size={20} />
+            </button>
+            
+            <button
+              onClick={() => deleteTask(task.id)}
+              className="p-1 text-red-500 hover:text-red-600"
+              aria-label="Excluir tarefa"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
         ))}
         {filteredTasks.length === 0 && (
-          <li className="text-center text-gray-500 py-4">
+          <div className="text-center text-gray-500 py-4">
             Nenhuma tarefa encontrada
-          </li>
+          </div>
         )}
-      </ul>
+      </div>
       
       {/* Estatísticas - Feedback de usabilidade */}
       <div className="mt-4 text-sm text-gray-600">
